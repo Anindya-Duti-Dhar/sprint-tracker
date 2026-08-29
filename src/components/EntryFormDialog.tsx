@@ -18,6 +18,8 @@ import {
   Alert,
   Box,
   CircularProgress,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { entrySchema, type EntryFormValues } from "@/lib/schemas";
@@ -60,6 +62,8 @@ export default function EntryFormDialog({
   entry?: EntryRecord;
 }) {
   const router = useRouter();
+  const theme = useTheme();
+  const fullScreenDialog = useMediaQuery(theme.breakpoints.down("sm"));
   const [lookups, setLookups] = useState<Lookups | null>(null);
   const [loadingLookups, setLoadingLookups] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -186,6 +190,7 @@ export default function EntryFormDialog({
       onClose={onClose}
       fullWidth
       maxWidth="sm"
+      fullScreen={fullScreenDialog}
       slots={{ transition: Grow }}
     >
       <DialogTitle>{mode === "edit" ? "Edit task" : "Add task"}</DialogTitle>

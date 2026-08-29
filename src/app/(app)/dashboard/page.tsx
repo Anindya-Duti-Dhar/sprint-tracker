@@ -15,7 +15,8 @@ export default async function DashboardPage() {
 
   const data = await withSessionClaims(async (client) => {
     const project = await client.query(
-      `select pr.*, poc.full_name as sprint_poc_name, asst.full_name as assistant_poc_name
+      `select pr.*, poc.full_name as sprint_poc_name, poc.avatar_url as sprint_poc_avatar_url,
+              asst.full_name as assistant_poc_name, asst.avatar_url as assistant_poc_avatar_url
          from public.projects pr
          left join public.profiles poc on poc.id = pr.sprint_poc_id
          left join public.profiles asst on asst.id = pr.assistant_poc_id
@@ -109,7 +110,9 @@ export default async function DashboardPage() {
         deadlineLabel: fmt(project.dev_end_date),
         milestones,
         sprintPocName: (project.sprint_poc_name as string | null) ?? null,
+        sprintPocAvatarUrl: (project.sprint_poc_avatar_url as string | null) ?? null,
         assistantPocName: (project.assistant_poc_name as string | null) ?? null,
+        assistantPocAvatarUrl: (project.assistant_poc_avatar_url as string | null) ?? null,
       }}
     />
   );

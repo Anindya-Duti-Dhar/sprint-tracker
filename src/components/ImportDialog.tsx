@@ -20,6 +20,8 @@ import {
   Chip,
   CircularProgress,
   Link as MuiLink,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import UploadFileOutlinedIcon from "@mui/icons-material/UploadFileOutlined";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
@@ -38,6 +40,8 @@ export default function ImportDialog({
   sprintName: string;
 }) {
   const router = useRouter();
+  const theme = useTheme();
+  const fullScreenDialog = useMediaQuery(theme.breakpoints.down("sm"));
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,7 +103,7 @@ export default function ImportDialog({
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
+    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md" fullScreen={fullScreenDialog}>
       <DialogTitle>Import tasks — {sprintName}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2.5}>

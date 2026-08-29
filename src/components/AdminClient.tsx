@@ -31,6 +31,9 @@ import {
   Alert,
   Grid,
   Divider,
+  Avatar,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import AddIcon from "@mui/icons-material/Add";
@@ -84,8 +87,18 @@ type User = {
   email: string;
   full_name: string;
   global_role: string;
+  avatar_url: string | null;
   created_at: string;
 };
+
+function userInitials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("");
+}
 type Project = Record<string, unknown> & { id: string; name: string; is_active: boolean };
 type TaskType = { id: string; label: string; is_active: boolean; sort_order: number };
 type Activity = {
@@ -169,7 +182,14 @@ function UsersPanel({ users }: { users: User[] }) {
           <TableBody>
             {users.map((u) => (
               <TableRow key={u.id} hover>
-                <TableCell>{u.full_name}</TableCell>
+                <TableCell>
+                  <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                    <Avatar src={u.avatar_url ?? undefined} sx={{ width: 26, height: 26, fontSize: 11 }}>
+                      {userInitials(u.full_name)}
+                    </Avatar>
+                    <Typography variant="body2">{u.full_name}</Typography>
+                  </Stack>
+                </TableCell>
                 <TableCell sx={{ color: "text.secondary" }}>{u.email}</TableCell>
                 <TableCell>
                   <TextField
@@ -413,6 +433,8 @@ function SprintDialog({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const theme = useTheme();
+  const fullScreenDialog = useMediaQuery(theme.breakpoints.down("sm"));
   const [serverError, setServerError] = useState<string | null>(null);
   const {
     control,
@@ -461,10 +483,10 @@ function SprintDialog({
   }
 
   return (
-    <Dialog open onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open onClose={onClose} fullWidth maxWidth="sm" fullScreen={fullScreenDialog}>
       <DialogTitle>{project ? "Edit sprint" : "Add sprint"}</DialogTitle>
       <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
-        <DialogContent dividers sx={{ maxHeight: "70vh" }}>
+        <DialogContent dividers sx={{ maxHeight: fullScreenDialog ? "none" : "70vh" }}>
           <Stack spacing={2.5}>
             {serverError && <Alert severity="error">{serverError}</Alert>}
             <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>

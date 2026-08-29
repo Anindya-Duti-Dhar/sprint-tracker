@@ -9,7 +9,7 @@ export default async function AdminPage() {
 
   const data = await withSessionClaims(async (client) => {
     const users = await client.query(
-      `select id, email, full_name, global_role, created_at
+      `select id, email, full_name, global_role, avatar_url, created_at
          from public.profiles order by full_name`,
     );
     const projects = await client.query(`select * from public.projects order by name desc`);

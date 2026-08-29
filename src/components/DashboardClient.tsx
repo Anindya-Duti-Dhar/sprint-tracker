@@ -32,7 +32,9 @@ export type DashboardData = {
   deadlineLabel: string | null;
   milestones: { label: string; date: string | null }[];
   sprintPocName: string | null;
+  sprintPocAvatarUrl: string | null;
   assistantPocName: string | null;
+  assistantPocAvatarUrl: string | null;
 };
 
 function initials(name: string) {
@@ -230,14 +232,30 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
 
             <Divider orientation="vertical" flexItem sx={{ display: { xs: "none", md: "block" } }} />
 
-            <Stack direction="row" spacing={2.5}>
+            <Stack
+              direction="row"
+              spacing={2.5}
+              useFlexGap
+              sx={{ flexWrap: "wrap", rowGap: 1.5 }}
+            >
               {[
-                { role: "Sprint POC", name: data.sprintPocName, color: "#1F6F6B" },
-                { role: "Assistant POC", name: data.assistantPocName, color: "#6A4FB2" },
-              ].map(({ role, name, color }) => (
+                {
+                  role: "Sprint POC",
+                  name: data.sprintPocName,
+                  avatarUrl: data.sprintPocAvatarUrl,
+                  color: "#1F6F6B",
+                },
+                {
+                  role: "Assistant POC",
+                  name: data.assistantPocName,
+                  avatarUrl: data.assistantPocAvatarUrl,
+                  color: "#6A4FB2",
+                },
+              ].map(({ role, name, avatarUrl, color }) => (
                 <Stack key={role} direction="row" spacing={1} sx={{ alignItems: "center" }}>
                   <Tooltip title={role}>
                     <Avatar
+                      src={avatarUrl ?? undefined}
                       sx={{
                         width: 36,
                         height: 36,

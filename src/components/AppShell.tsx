@@ -18,10 +18,14 @@ import {
   Divider,
   Container,
   Button,
+  Drawer,
+  List,
+  ListItemButton,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AddIcon from "@mui/icons-material/Add";
+import MenuIcon from "@mui/icons-material/Menu";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 import EntryFormDialog from "@/components/EntryFormDialog";
 import type { SessionUser } from "@/lib/auth";
@@ -55,6 +59,7 @@ export default function AppShell({
   const [scrolled, setScrolled] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
 
   const links = [
     ...NAV_LINKS,
@@ -112,7 +117,12 @@ export default function AppShell({
           <Stack
             direction="row"
             spacing={0.5}
-            sx={{ flexGrow: 1, alignItems: "center", position: "relative" }}
+            sx={{
+              flexGrow: 1,
+              alignItems: "center",
+              position: "relative",
+              display: { xs: "none", md: "flex" },
+            }}
           >
             {links.map((link) => {
               const active =
@@ -183,6 +193,24 @@ export default function AppShell({
             </Button>
           </Stack>
 
+          <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "none" }, justifyContent: "flex-end" }}>
+            <IconButton
+              onClick={() => setQuickAddOpen(true)}
+              size="small"
+              aria-label="New task"
+              sx={{ color: "primary.main" }}
+            >
+              <AddIcon />
+            </IconButton>
+            <IconButton
+              onClick={() => setNavOpen(true)}
+              size="small"
+              aria-label="Open navigation menu"
+            >
+              <MenuIcon />
+            </IconButton>
+          </Box>
+
           <IconButton
             onClick={(e) => setAnchorEl(e.currentTarget)}
             size="small"
@@ -192,6 +220,7 @@ export default function AppShell({
             }}
           >
             <Avatar
+              src={user.avatarUrl ?? undefined}
               sx={{
                 width: 32,
                 height: 32,
@@ -229,6 +258,56 @@ export default function AppShell({
           </Menu>
         </Toolbar>
       </AppBar>
+
+      <Drawer anchor="right" open={navOpen} onClose={() => setNavOpen(false)}>
+        <Box sx={{ width: 260, pt: 1 }} role="presentation">
+          <Box sx={{ px: 2, py: 1.5 }}>
+            <Box sx={{ fontWeight: 600, fontSize: 14 }}>{user.fullName}</Box>
+            <Box sx={{ fontSize: 12, color: "text.secondary" }}>{user.email}</Box>
+          </Box>
+          <Divider />
+          <List sx={{ py: 0.5 }}>
+            {links.map((link) => {
+              const active =
+                link.href === "/dashboard"
+                  ? pathname === "/dashboard"
+                  : pathname?.startsWith(link.href);
+              return (
+                <ListItemButton
+                  key={link.href}
+                  component={Link}
+                  href={link.href}
+                  selected={active}
+                  onClick={() => setNavOpen(false)}
+                  sx={{
+                    "&.Mui-selected": {
+                      bgcolor: "rgba(31,111,107,0.1)",
+                      color: "primary.dark",
+                      fontWeight: 700,
+                    },
+                  }}
+                >
+                  {link.href === "/admin" && (
+                    <ListItemIcon sx={{ minWidth: 32 }}>
+                      <AdminPanelSettingsIcon fontSize="small" />
+                    </ListItemIcon>
+                  )}
+                  <ListItemText>{link.label}</ListItemText>
+                </ListItemButton>
+              );
+            })}
+          </List>
+          <Divider />
+          <List sx={{ py: 0.5 }}>
+            <ListItemButton onClick={handleLogout}>
+              <ListItemIcon sx={{ minWidth: 32 }}>
+                <LogoutIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Logout</ListItemText>
+            </ListItemButton>
+          </List>
+        </Box>
+      </Drawer>
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <motion.div

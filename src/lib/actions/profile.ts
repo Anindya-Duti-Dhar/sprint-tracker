@@ -35,6 +35,24 @@ export async function updateProfile(values: ProfileFormValues): Promise<ActionRe
   return { ok: true };
 }
 
+/** Removes the caller's own profile photo (reverts to initials everywhere). */
+export async function removeAvatar(): Promise<ActionResult> {
+  try {
+    const result = await withSessionClaims((client) =>
+      client.query(`update public.profiles set avatar_url = null where id = auth.uid()`),
+    );
+    if (result.rowCount === 0) {
+      return { ok: false, error: "You must be signed in to update your photo." };
+    }
+  } catch {
+    return { ok: false, error: "Couldn't remove your photo. Please try again." };
+  }
+  revalidatePath("/settings");
+  revalidatePath("/dashboard");
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
 /**
  * Self-service password change for every role. Only ever targets the
  * currently-signed-in user's own auth.users row (never accepts a target id

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
@@ -15,14 +16,19 @@ import {
   Chip,
   Avatar,
   Divider,
+  IconButton,
+  CircularProgress,
 } from "@mui/material";
+import PhotoCameraOutlinedIcon from "@mui/icons-material/PhotoCameraOutlined";
+import CloseIcon from "@mui/icons-material/Close";
 import {
   profileSchema,
   passwordSchema,
   type ProfileFormValues,
   type PasswordFormValues,
 } from "@/lib/schemas";
-import { updateProfile, changePassword } from "@/lib/actions/profile";
+import { updateProfile, changePassword, removeAvatar } from "@/lib/actions/profile";
+import { resizeImageToJpegBlob } from "@/lib/imageResize";
 import type { SessionUser } from "@/lib/auth";
 
 const ROLE_COLOR: Record<string, "error" | "warning" | "info" | "default"> = {
@@ -57,11 +63,13 @@ export default function SettingsClient({ user }: { user: SessionUser }) {
         transition={{ duration: 0.3 }}
       >
         <Paper sx={{ p: 3 }}>
-          <Stack direction="row" spacing={2} sx={{ alignItems: "center", mb: 2 }}>
-            <Avatar sx={{ width: 44, height: 44, bgcolor: "primary.light" }}>
-              {initials(user.fullName)}
-            </Avatar>
-            <Box sx={{ flexGrow: 1 }}>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={2}
+            sx={{ alignItems: { xs: "flex-start", sm: "center" }, mb: 2 }}
+          >
+            <AvatarUploader user={user} />
+            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
               <Typography sx={{ fontWeight: 700 }}>{user.fullName}</Typography>
               <Typography variant="body2" color="text.secondary">
                 {user.email}
@@ -89,6 +97,126 @@ export default function SettingsClient({ user }: { user: SessionUser }) {
           <PasswordForm />
         </Paper>
       </motion.div>
+    </Stack>
+  );
+}
+
+function AvatarUploader({ user }: { user: SessionUser }) {
+  const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file later
+    if (!file) return;
+    setError(null);
+    setUploading(true);
+    try {
+      const resized = await resizeImageToJpegBlob(file);
+      const form = new FormData();
+      form.append("file", resized, "avatar.jpg");
+      const res = await fetch("/api/profile/avatar", { method: "POST", body: form });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(body.error ?? "Couldn't upload your photo.");
+        return;
+      }
+      setAvatarUrl(body.avatarUrl);
+      router.refresh();
+    } catch {
+      setError("Couldn't process that image. Try a different file.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleRemove() {
+    setError(null);
+    setUploading(true);
+    try {
+      const result = await removeAvatar();
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setAvatarUrl(null);
+      router.refresh();
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <Stack spacing={0.75} sx={{ alignItems: "center" }}>
+      <Box sx={{ position: "relative", width: 64, height: 64 }}>
+        <Avatar
+          src={avatarUrl ?? undefined}
+          sx={{ width: 64, height: 64, bgcolor: "primary.light", fontSize: 22 }}
+        >
+          {initials(user.fullName)}
+        </Avatar>
+        {uploading && (
+          <Box
+            sx={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              bgcolor: "rgba(0,0,0,0.35)",
+            }}
+          >
+            <CircularProgress size={22} sx={{ color: "#fff" }} />
+          </Box>
+        )}
+        <IconButton
+          size="small"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          sx={{
+            position: "absolute",
+            right: -4,
+            bottom: -4,
+            width: 26,
+            height: 26,
+            bgcolor: "background.paper",
+            border: "1px solid",
+            borderColor: "divider",
+            boxShadow: "0 2px 6px -1px rgba(20,30,28,0.25)",
+            "&:hover": { bgcolor: "background.paper" },
+          }}
+        >
+          <PhotoCameraOutlinedIcon sx={{ fontSize: 14 }} />
+        </IconButton>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={handleFileChange}
+        />
+      </Box>
+      {avatarUrl && (
+        <Button
+          size="small"
+          color="inherit"
+          startIcon={<CloseIcon sx={{ fontSize: 14 }} />}
+          onClick={handleRemove}
+          disabled={uploading}
+          sx={{ fontSize: 11, minWidth: 0, color: "text.secondary" }}
+        >
+          Remove
+        </Button>
+      )}
+      {error && (
+        <Typography variant="caption" color="error" sx={{ maxWidth: 120, textAlign: "center" }}>
+          {error}
+        </Typography>
+      )}
     </Stack>
   );
 }

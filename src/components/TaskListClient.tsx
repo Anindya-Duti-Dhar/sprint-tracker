@@ -134,7 +134,11 @@ export default function TaskListClient({
 
   return (
     <Stack spacing={2.5}>
-      <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={1.5}
+        sx={{ justifyContent: "space-between", alignItems: { xs: "stretch", sm: "flex-start" } }}
+      >
         <Box>
           <Typography variant="h5">Task List</Typography>
           <Typography color="text.secondary" sx={{ mt: 0.5 }}>
@@ -143,7 +147,7 @@ export default function TaskListClient({
               : `Showing the active sprint (${activeProjectName ?? "none"})`}
           </Typography>
         </Box>
-        <Stack direction="row" spacing={1.5}>
+        <Stack direction="row" spacing={1.5} useFlexGap sx={{ flexWrap: "wrap" }}>
           {canExportImport && (
             <Button
               variant="outlined"
@@ -174,12 +178,12 @@ export default function TaskListClient({
       </Stack>
 
       <Paper sx={{ p: 2 }}>
-        <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }}>
+        <Stack direction="row" spacing={2} useFlexGap sx={{ flexWrap: "wrap" }}>
           <TextField
             select
             size="small"
             label="Sprint"
-            sx={{ minWidth: 160 }}
+            sx={{ minWidth: 160, flex: { xs: "1 1 100%", sm: "0 1 auto" } }}
             value={filters.sprint ?? resolvedProjectId ?? ""}
             onChange={(e) => setFilter("sprint", e.target.value)}
           >
@@ -193,7 +197,7 @@ export default function TaskListClient({
             select
             size="small"
             label="Task Type"
-            sx={{ minWidth: 160 }}
+            sx={{ minWidth: 160, flex: { xs: "1 1 100%", sm: "0 1 auto" } }}
             value={filters.taskType ?? ""}
             onChange={(e) => setFilter("taskType", e.target.value)}
           >
@@ -208,7 +212,7 @@ export default function TaskListClient({
             select
             size="small"
             label="Assignee"
-            sx={{ minWidth: 160 }}
+            sx={{ minWidth: 160, flex: { xs: "1 1 100%", sm: "0 1 auto" } }}
             value={filters.assignee ?? ""}
             onChange={(e) => setFilter("assignee", e.target.value)}
           >
@@ -223,7 +227,7 @@ export default function TaskListClient({
             select
             size="small"
             label="Android POC"
-            sx={{ minWidth: 160 }}
+            sx={{ minWidth: 160, flex: { xs: "1 1 100%", sm: "0 1 auto" } }}
             value={filters.poc ?? ""}
             onChange={(e) => setFilter("poc", e.target.value)}
           >
@@ -356,7 +360,7 @@ export default function TaskListClient({
         entry={dialog?.mode === "edit" ? dialog.entry : undefined}
       />
 
-      <Dialog open={!!confirmDelete} onClose={() => setConfirmDelete(null)}>
+      <Dialog open={!!confirmDelete} onClose={() => setConfirmDelete(null)} fullWidth maxWidth="xs">
         <DialogTitle>Delete this task?</DialogTitle>
         <DialogContent>
           <Typography color="text.secondary">

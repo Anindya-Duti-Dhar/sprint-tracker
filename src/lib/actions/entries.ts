@@ -111,7 +111,7 @@ export async function deleteEntry(id: string): Promise<ActionResult> {
 function friendlyDbError(err: unknown): string {
   const message = err instanceof Error ? err.message : String(err);
   if (message.includes("entries_hours_check")) {
-    return "Hours must be between 0.5 and 13.";
+    return "Hours must be between 0.5 and 100.";
   }
   if (message.includes("entries_feature_check")) {
     return "Feature must be 3–140 characters.";

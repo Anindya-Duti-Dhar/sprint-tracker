@@ -20,7 +20,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { entrySchema, HOURS_OPTIONS, type EntryFormValues } from "@/lib/schemas";
+import { entrySchema, type EntryFormValues } from "@/lib/schemas";
 import { createEntry, updateEntry } from "@/lib/actions/entries";
 import { ACTIVITY_COLORS } from "@/lib/activityColors";
 
@@ -277,20 +277,14 @@ export default function EntryFormDialog({
               </TextField>
 
               <TextField
-                select
                 label="Android (Hrs)"
+                type="number"
                 fullWidth
                 {...register("hours", { valueAsNumber: true })}
-                value={watch("hours") ?? ""}
                 error={!!errors.hours}
-                helperText={errors.hours?.message}
-              >
-                {HOURS_OPTIONS.map((h) => (
-                  <MenuItem key={h} value={h}>
-                    {h.toFixed(1)}
-                  </MenuItem>
-                ))}
-              </TextField>
+                helperText={errors.hours?.message ?? "0.5 to 100 hours."}
+                slotProps={{ htmlInput: { min: 0.5, max: 100, step: 0.5 } }}
+              />
 
               <TextField
                 select

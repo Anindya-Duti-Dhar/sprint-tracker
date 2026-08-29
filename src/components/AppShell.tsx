@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import {
   AppBar,
   Toolbar,
@@ -21,6 +22,7 @@ import {
 import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AddIcon from "@mui/icons-material/Add";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 import EntryFormDialog from "@/components/EntryFormDialog";
 import type { SessionUser } from "@/lib/auth";
 
@@ -53,6 +55,11 @@ export default function AppShell({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
 
+  const links = [
+    ...NAV_LINKS,
+    ...(user.globalRole === "admin" ? [{ href: "/admin", label: "Admin" }] : []),
+  ];
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 4);
     onScroll();
@@ -72,29 +79,84 @@ export default function AppShell({
         position="sticky"
         elevation={0}
         sx={{
+          bgcolor: "rgba(255,255,255,0.82)",
+          backdropFilter: "blur(14px) saturate(160%)",
+          WebkitBackdropFilter: "blur(14px) saturate(160%)",
           borderBottom: "1px solid",
-          borderColor: "divider",
+          borderColor: scrolled ? "divider" : "transparent",
           boxShadow: scrolled
-            ? "0 1px 2px rgba(20,30,28,0.06), 0 8px 24px -12px rgba(20,30,28,0.12)"
+            ? "0 1px 2px rgba(20,30,28,0.06), 0 12px 32px -16px rgba(20,30,28,0.16)"
             : "none",
-          transition: "box-shadow .2s ease",
+          transition: "box-shadow .25s ease, border-color .25s ease",
         }}
       >
         <Toolbar sx={{ gap: 3 }}>
-          <Stack direction="row" spacing={3} sx={{ flexGrow: 1, alignItems: "center" }}>
-            {NAV_LINKS.map((link) => {
-              const active = pathname?.startsWith(link.href);
+          <Box
+            sx={{
+              fontFamily: "'Manrope', sans-serif",
+              fontWeight: 800,
+              fontSize: 15,
+              letterSpacing: 0.2,
+              background: "linear-gradient(135deg, #1F6F6B, #5FBDB4)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              whiteSpace: "nowrap",
+              mr: 1,
+            }}
+          >
+            Sprint Tracker
+          </Box>
+
+          <Stack
+            direction="row"
+            spacing={0.5}
+            sx={{ flexGrow: 1, alignItems: "center", position: "relative" }}
+          >
+            {links.map((link) => {
+              const active =
+                link.href === "/dashboard"
+                  ? pathname === "/dashboard"
+                  : pathname?.startsWith(link.href);
               return (
                 <Box
                   key={link.href}
                   component={Link}
                   href={link.href}
                   sx={{
+                    position: "relative",
+                    px: 1.5,
+                    py: 0.75,
+                    borderRadius: 2,
                     fontSize: 14,
                     fontWeight: active ? 700 : 500,
                     color: active ? "primary.dark" : "text.secondary",
+                    transition: "color .18s ease, background-color .18s ease",
+                    "&:hover": {
+                      color: "primary.dark",
+                      bgcolor: "rgba(31,111,107,0.06)",
+                    },
                   }}
                 >
+                  {active && (
+                    <motion.div
+                      layoutId="nav-active-pill"
+                      transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        borderRadius: 8,
+                        background: "rgba(31,111,107,0.1)",
+                        zIndex: -1,
+                      }}
+                    />
+                  )}
+                  {link.href === "/admin" && (
+                    <AdminPanelSettingsIcon
+                      fontSize="inherit"
+                      sx={{ fontSize: 15, verticalAlign: "-2px", mr: 0.5 }}
+                    />
+                  )}
                   {link.label}
                 </Box>
               );
@@ -102,15 +164,42 @@ export default function AppShell({
             <Button
               size="small"
               startIcon={<AddIcon />}
-              variant="outlined"
+              variant="contained"
+              disableElevation
               onClick={() => setQuickAddOpen(true)}
+              sx={{
+                ml: 1.5,
+                background: "linear-gradient(135deg, #1F6F6B, #2C8C86)",
+                transition: "transform .15s ease, box-shadow .15s ease",
+                "&:hover": {
+                  background: "linear-gradient(135deg, #1a615d, #257a75)",
+                  transform: "translateY(-1px)",
+                  boxShadow: "0 8px 20px -8px rgba(31,111,107,0.6)",
+                },
+              }}
             >
               New Task
             </Button>
           </Stack>
 
-          <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} size="small">
-            <Avatar sx={{ width: 30, height: 30, fontSize: 13, bgcolor: "primary.light" }}>
+          <IconButton
+            onClick={(e) => setAnchorEl(e.currentTarget)}
+            size="small"
+            sx={{
+              transition: "transform .15s ease",
+              "&:hover": { transform: "scale(1.06)" },
+            }}
+          >
+            <Avatar
+              sx={{
+                width: 32,
+                height: 32,
+                fontSize: 13,
+                fontWeight: 700,
+                background: "linear-gradient(135deg, #5FBDB4, #1F6F6B)",
+                color: "#fff",
+              }}
+            >
               {initials(user.fullName) || <PersonIcon fontSize="small" />}
             </Avatar>
           </IconButton>

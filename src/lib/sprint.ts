@@ -25,15 +25,21 @@ export function daysRemaining(devEnd: Date | null, today: Date = new Date()): nu
   return Math.max(0, dayDiff(devEnd, today));
 }
 
-/** Count Mon–Fri calendar days between start and end, inclusive. */
+/**
+ * Count working days (Sun–Thu) between start and end, inclusive — Bangladesh's
+ * standard work week, not the Mon–Fri default. Friday and Saturday are the
+ * weekend. No public-holiday calendar is subtracted; add one here (a
+ * `public.holidays` lookup, checked per-date) if specific holidays inside a
+ * sprint should also be excluded from capacity.
+ */
 export function countWorkdays(start: Date | null, end: Date | null): number {
   if (!start || !end || end < start) return 0;
   let count = 0;
   const cur = new Date(Date.UTC(start.getFullYear(), start.getMonth(), start.getDate()));
   const last = new Date(Date.UTC(end.getFullYear(), end.getMonth(), end.getDate()));
   while (cur <= last) {
-    const day = cur.getUTCDay();
-    if (day !== 0 && day !== 6) count += 1;
+    const day = cur.getUTCDay(); // 0=Sun .. 6=Sat
+    if (day !== 5 && day !== 6) count += 1; // exclude Fri, Sat
     cur.setUTCDate(cur.getUTCDate() + 1);
   }
   return count;

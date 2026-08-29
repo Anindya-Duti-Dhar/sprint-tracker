@@ -26,7 +26,10 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/EditOutlined";
 import DeleteIcon from "@mui/icons-material/DeleteOutlined";
+import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
+import UploadFileOutlinedIcon from "@mui/icons-material/UploadFileOutlined";
 import EntryFormDialog, { type EntryRecord } from "@/components/EntryFormDialog";
+import ImportDialog from "@/components/ImportDialog";
 import { deleteEntry } from "@/lib/actions/entries";
 import { ACTIVITY_CHIP_STYLE } from "@/lib/activityColors";
 
@@ -75,6 +78,7 @@ export default function TaskListClient({
   >(null);
   const [confirmDelete, setConfirmDelete] = useState<EntryRow | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   function setFilter(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -125,13 +129,30 @@ export default function TaskListClient({
               : `Showing the active sprint (${activeProjectName ?? "none"})`}
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => setDialog({ mode: "create" })}
-        >
-          Add
-        </Button>
+        <Stack direction="row" spacing={1.5}>
+          <Button
+            variant="outlined"
+            startIcon={<DownloadOutlinedIcon />}
+            component="a"
+            href={`/api/entries/export${resolvedProjectId ? `?sprint=${resolvedProjectId}` : ""}`}
+          >
+            Export
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<UploadFileOutlinedIcon />}
+            onClick={() => setImportOpen(true)}
+          >
+            Import
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setDialog({ mode: "create" })}
+          >
+            Add
+          </Button>
+        </Stack>
       </Stack>
 
       <Paper sx={{ p: 2 }}>
@@ -326,6 +347,13 @@ export default function TaskListClient({
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ImportDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        sprintId={resolvedProjectId}
+        sprintName={activeProjectName ?? "—"}
+      />
     </Stack>
   );
 }

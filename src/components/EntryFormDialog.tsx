@@ -30,6 +30,8 @@ type Lookups = {
   activities: { id: string; label: string; is_default: boolean }[];
   members: { id: string; full_name: string; project_role: string }[];
   resolvedProjectId: string | null;
+  currentUserId: string;
+  canAssignOthers: boolean;
 };
 
 export type EntryRecord = {
@@ -131,7 +133,9 @@ export default function EntryFormDialog({
           feature: "",
           taskTypeId: "",
           task: "",
-          assigneeId: "",
+          // A member can only ever log tasks for themselves — lock the
+          // Assignee field to their own id rather than let them pick.
+          assigneeId: data.canAssignOthers ? "" : data.currentUserId,
           androidPocId: "",
           hours: 1,
           activityId: defaultActivity?.id ?? "",
@@ -152,7 +156,9 @@ export default function EntryFormDialog({
     fetchLookups(projectId).then((data) => {
       const stillValidAssignee = data.members.some((m) => m.id === watch("assigneeId"));
       const stillValidPoc = data.members.some((m) => m.id === watch("androidPocId"));
-      if (!stillValidAssignee) setValue("assigneeId", "");
+      if (!stillValidAssignee) {
+        setValue("assigneeId", data.canAssignOthers ? "" : data.currentUserId);
+      }
       if (!stillValidPoc) setValue("androidPocId", "");
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -247,10 +253,16 @@ export default function EntryFormDialog({
                 select
                 label="Assignee"
                 fullWidth
+                disabled={!lookups?.canAssignOthers}
                 {...register("assigneeId")}
                 value={watch("assigneeId") ?? ""}
                 error={!!errors.assigneeId}
-                helperText={errors.assigneeId?.message ?? "Scoped to this sprint's members"}
+                helperText={
+                  errors.assigneeId?.message ??
+                  (lookups?.canAssignOthers
+                    ? "Scoped to this sprint's members"
+                    : "Members can only log tasks for themselves")
+                }
               >
                 {members.map((m) => (
                   <MenuItem key={m.id} value={m.id}>

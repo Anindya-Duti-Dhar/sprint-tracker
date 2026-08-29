@@ -1,4 +1,4 @@
-import { withSessionClaims } from "@/lib/auth";
+import { withSessionClaims, isManagerOrAdmin } from "@/lib/auth";
 import ReportClient from "@/components/ReportClient";
 
 export default async function ReportPage({
@@ -63,6 +63,8 @@ export default async function ReportPage({
         order by p.name`,
     );
 
+    const canExport = await isManagerOrAdmin(client, projectId);
+
     return {
       projects: projects.rows,
       resolvedProjectId: projectId,
@@ -70,6 +72,7 @@ export default async function ReportPage({
       byTaskType: byTaskType.rows.map((r) => ({ label: r.label, hours: Number(r.hours) })),
       byMember: byMember.rows.map((r) => ({ label: r.full_name, hours: Number(r.hours) })),
       crossSprint: crossSprint.rows.map((r) => ({ label: r.name, hours: Number(r.hours) })),
+      canExport,
     };
   });
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSessionUser, withSessionClaims } from "@/lib/auth";
+import { getSessionUser, withSessionClaims, isManagerOrAdmin } from "@/lib/auth";
 import { buildExportWorkbook, type ExportRow } from "@/lib/excel";
 
 export async function GET(request: Request) {
@@ -13,6 +13,9 @@ export async function GET(request: Request) {
   const poc = searchParams.get("poc");
 
   const rows = await withSessionClaims(async (client) => {
+    if (!(await isManagerOrAdmin(client, sprint))) {
+      return { forbidden: true as const };
+    }
     const conditions: string[] = [];
     const params: unknown[] = [];
     if (sprint) {
@@ -50,6 +53,13 @@ export async function GET(request: Request) {
     );
     return result.rows;
   });
+
+  if ("forbidden" in rows) {
+    return NextResponse.json(
+      { error: "Only an Admin or Manager can export tasks." },
+      { status: 403 },
+    );
+  }
 
   const exportRows: ExportRow[] = rows.map((r) => ({
     sprintName: r.sprint_name,

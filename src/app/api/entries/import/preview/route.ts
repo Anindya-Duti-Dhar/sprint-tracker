@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSessionUser, withSessionClaims } from "@/lib/auth";
+import { getSessionUser, withSessionClaims, isManagerOrAdmin } from "@/lib/auth";
 import { parseImportWorkbook } from "@/lib/excel";
 
 export type PreviewRow = {
@@ -32,6 +32,14 @@ export async function POST(request: Request) {
   }
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "Choose a file to upload." }, { status: 400 });
+  }
+
+  const allowed = await withSessionClaims((client) => isManagerOrAdmin(client, sprintId));
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Only an Admin or Manager can import tasks." },
+      { status: 403 },
+    );
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());

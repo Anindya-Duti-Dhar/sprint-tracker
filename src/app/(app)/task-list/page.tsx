@@ -1,4 +1,5 @@
-import { withSessionClaims } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { getSessionUser, withSessionClaims } from "@/lib/auth";
 import TaskListClient from "@/components/TaskListClient";
 
 type SearchParams = {
@@ -14,6 +15,8 @@ export default async function TaskListPage({
   searchParams: Promise<SearchParams>;
 }) {
   const sp = await searchParams;
+  const user = await getSessionUser();
+  if (!user) redirect("/login");
 
   const data = await withSessionClaims(async (client) => {
     const projects = await client.query(
@@ -28,7 +31,7 @@ export default async function TaskListPage({
 
     const members = projectId
       ? await client.query(
-          `select p.id, p.full_name
+          `select p.id, p.full_name, pm.project_role
              from public.project_members pm
              join public.profiles p on p.id = pm.user_id
             where pm.project_id = $1
@@ -92,6 +95,8 @@ export default async function TaskListPage({
       entries={data.entries}
       resolvedProjectId={data.resolvedProjectId}
       filters={sp}
+      currentUserId={user.id}
+      isAdmin={user.globalRole === "admin"}
     />
   );
 }

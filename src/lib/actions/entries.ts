@@ -116,5 +116,8 @@ function friendlyDbError(err: unknown): string {
   if (message.includes("entries_feature_check")) {
     return "Feature must be 3–140 characters.";
   }
+  if (message.includes("row-level security policy")) {
+    return "Members can only add or edit tasks assigned to themselves.";
+  }
   return "Couldn't save this task. Please try again.";
 }

@@ -101,7 +101,7 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
             label="Team capacity"
             value={data.capacity}
             decimals={1}
-            accent="teal"
+            accent="violet"
             icon={<GroupsOutlinedIcon fontSize="inherit" />}
           >
             {data.memberCount} members × {data.workdays} working days × 6.5h
@@ -119,7 +119,14 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
           </StatCard>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 4 }} component={motion.div} {...cardMotion(5)}>
-          <Paper sx={{ p: 2.5, height: "100%" }}>
+          <Paper
+            sx={{
+              p: 2.5,
+              height: "100%",
+              background:
+                "linear-gradient(160deg, #F3F6F5 0%, #FAFBFA 55%, #FFFFFF 100%)",
+            }}
+          >
             <Typography variant="overline" color="text.secondary">
               Hours by member
             </Typography>

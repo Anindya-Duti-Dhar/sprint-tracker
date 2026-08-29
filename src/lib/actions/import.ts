@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
-import { withSessionClaims } from "@/lib/auth";
+import { withSessionClaims, isManagerOrAdmin } from "@/lib/auth";
 import type { PreviewRow } from "@/app/api/entries/import/preview/route";
 import type { ActionResult } from "@/lib/actions/entries";
 
@@ -38,6 +38,9 @@ export async function confirmImport(
   const batchId = randomUUID();
   try {
     await withSessionClaims(async (client) => {
+      if (!(await isManagerOrAdmin(client, sprintId))) {
+        throw new Error("forbidden");
+      }
       const me = await client.query("select auth.uid() as id");
       const userId = me.rows[0]?.id;
       if (!userId) throw new Error("not_signed_in");

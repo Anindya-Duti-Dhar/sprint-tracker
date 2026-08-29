@@ -35,7 +35,7 @@ import { ACTIVITY_CHIP_STYLE } from "@/lib/activityColors";
 
 type Project = { id: string; name: string; is_active: boolean };
 type TaskType = { id: string; label: string };
-type Member = { id: string; full_name: string };
+type Member = { id: string; full_name: string; project_role?: string };
 type EntryRow = {
   id: string;
   project_id: string;
@@ -62,6 +62,8 @@ export default function TaskListClient({
   entries,
   resolvedProjectId,
   filters,
+  currentUserId,
+  isAdmin,
 }: {
   projects: Project[];
   taskTypes: TaskType[];
@@ -69,6 +71,8 @@ export default function TaskListClient({
   entries: EntryRow[];
   resolvedProjectId: string | null;
   filters: { sprint?: string; taskType?: string; assignee?: string; poc?: string };
+  currentUserId: string;
+  isAdmin: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -79,6 +83,16 @@ export default function TaskListClient({
   const [confirmDelete, setConfirmDelete] = useState<EntryRow | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+
+  const currentMember = members.find((m) => m.id === currentUserId);
+  const isManagerHere = currentMember?.project_role === "manager";
+  const canManageAll = isAdmin || isManagerHere;
+  const canExportImport = canManageAll;
+
+  function canActOnRow(row: EntryRow): boolean {
+    if (canManageAll) return true;
+    return row.created_by === currentUserId || row.assignee_id === currentUserId;
+  }
 
   function setFilter(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -130,21 +144,25 @@ export default function TaskListClient({
           </Typography>
         </Box>
         <Stack direction="row" spacing={1.5}>
-          <Button
-            variant="outlined"
-            startIcon={<DownloadOutlinedIcon />}
-            component="a"
-            href={`/api/entries/export${resolvedProjectId ? `?sprint=${resolvedProjectId}` : ""}`}
-          >
-            Export
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<UploadFileOutlinedIcon />}
-            onClick={() => setImportOpen(true)}
-          >
-            Import
-          </Button>
+          {canExportImport && (
+            <Button
+              variant="outlined"
+              startIcon={<DownloadOutlinedIcon />}
+              component="a"
+              href={`/api/entries/export${resolvedProjectId ? `?sprint=${resolvedProjectId}` : ""}`}
+            >
+              Export
+            </Button>
+          )}
+          {canExportImport && (
+            <Button
+              variant="outlined"
+              startIcon={<UploadFileOutlinedIcon />}
+              onClick={() => setImportOpen(true)}
+            >
+              Import
+            </Button>
+          )}
           <Button
             variant="contained"
             startIcon={<AddIcon />}
@@ -251,14 +269,19 @@ export default function TaskListClient({
               </TableRow>
             </TableHead>
             <TableBody>
-              {entries.map((row) => {
+              {entries.map((row, idx) => {
                 const chipStyle = ACTIVITY_CHIP_STYLE[row.activity_label] ?? {
                   bg: "#EEF1F0",
                   color: "#57655F",
                 };
-                const canEdit = true; // RLS is the real gate; UI just offers the action
+                const canEdit = canActOnRow(row);
                 return (
-                  <TableRow key={row.id} hover>
+                  <TableRow
+                    key={row.id}
+                    hover
+                    className="stt-row-in"
+                    sx={{ animationDelay: `${Math.min(idx, 12) * 25}ms` }}
+                  >
                     <TableCell sx={{ maxWidth: 220 }}>{row.feature}</TableCell>
                     <TableCell>{row.task_type_label}</TableCell>
                     <TableCell sx={{ maxWidth: 220, color: "text.secondary" }}>
@@ -293,10 +316,11 @@ export default function TaskListClient({
                       {row.remark ?? "—"}
                     </TableCell>
                     <TableCell align="right">
-                      <Tooltip title={canEdit ? "Edit" : "You can't edit this task"}>
+                      <Tooltip title={canEdit ? "Edit" : "Only an Admin or Manager can edit another member's task"}>
                         <span>
                           <IconButton
                             size="small"
+                            disabled={!canEdit}
                             onClick={() =>
                               setDialog({ mode: "edit", entry: toEntryRecord(row) })
                             }
@@ -305,10 +329,16 @@ export default function TaskListClient({
                           </IconButton>
                         </span>
                       </Tooltip>
-                      <Tooltip title="Delete">
-                        <IconButton size="small" onClick={() => setConfirmDelete(row)}>
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
+                      <Tooltip title={canEdit ? "Delete" : "Only an Admin or Manager can delete another member's task"}>
+                        <span>
+                          <IconButton
+                            size="small"
+                            disabled={!canEdit}
+                            onClick={() => setConfirmDelete(row)}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </span>
                       </Tooltip>
                     </TableCell>
                   </TableRow>

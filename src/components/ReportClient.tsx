@@ -106,6 +106,7 @@ export default function ReportClient({
   byTaskType,
   byMember,
   crossSprint,
+  canExport,
 }: {
   projects: Project[];
   resolvedProjectId: string | null;
@@ -113,6 +114,7 @@ export default function ReportClient({
   byTaskType: Row[];
   byMember: Row[];
   crossSprint: Row[];
+  canExport: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -150,19 +152,21 @@ export default function ReportClient({
               </MenuItem>
             ))}
           </TextField>
-          <Button
-            variant="outlined"
-            startIcon={<DownloadOutlinedIcon />}
-            component="a"
-            href={`/api/entries/export${resolvedProjectId ? `?sprint=${resolvedProjectId}` : ""}`}
-          >
-            Export
-          </Button>
+          {canExport && (
+            <Button
+              variant="outlined"
+              startIcon={<DownloadOutlinedIcon />}
+              component="a"
+              href={`/api/entries/export${resolvedProjectId ? `?sprint=${resolvedProjectId}` : ""}`}
+            >
+              Export
+            </Button>
+          )}
         </Stack>
       </Stack>
 
       <Grid container spacing={2.5}>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 6 }} className="stt-row-in" sx={{ animationDelay: "0ms" }}>
           <ChartCard
             title="Hours by Activity"
             subtitle={`${activeName} — where the work stands right now`}
@@ -171,7 +175,7 @@ export default function ReportClient({
             colorFor={(label) => ACTIVITY_CHIP_STYLE[label]?.color ?? BRAND_HUE}
           />
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 6 }} className="stt-row-in" sx={{ animationDelay: "60ms" }}>
           <ChartCard
             title="Hours by Task Type"
             subtitle={`${activeName} — Revamp / CR / New split`}
@@ -179,7 +183,7 @@ export default function ReportClient({
             colorFor={(_, i) => CATEGORICAL[i % CATEGORICAL.length]}
           />
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 6 }} className="stt-row-in" sx={{ animationDelay: "120ms" }}>
           <ChartCard
             title="Hours by Member"
             subtitle={`${activeName} — who's logged what`}
@@ -188,7 +192,7 @@ export default function ReportClient({
             colorFor={() => BRAND_HUE}
           />
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 6 }} className="stt-row-in" sx={{ animationDelay: "180ms" }}>
           <ChartCard
             title="Hours across sprints"
             subtitle="Every sprint, all time"

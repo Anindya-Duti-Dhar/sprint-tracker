@@ -36,12 +36,19 @@ export async function GET(request: Request) {
         )
       : { rows: [] };
 
+    const isAdmin = user.globalRole === "admin";
+    const isManagerHere = members.rows.some(
+      (m) => m.id === user.id && m.project_role === "manager",
+    );
+
     return {
       projects: projects.rows,
       taskTypes: taskTypes.rows,
       activities: activities.rows,
       members: members.rows,
       resolvedProjectId: projectId,
+      currentUserId: user.id,
+      canAssignOthers: isAdmin || isManagerHere,
     };
   });
 

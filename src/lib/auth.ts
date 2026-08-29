@@ -76,4 +76,34 @@ export async function withSessionClaims<T>(
   return withClaims({ sub: userId, role: "authenticated" }, fn);
 }
 
+/**
+ * Excel import/export is restricted to Admin, or a Manager of the sprint in
+ * question (or, when no specific sprint is given — an all-sprints export —
+ * a Manager of at least one sprint). Mirrors the entries RLS ownership rules
+ * but is checked in code because these are file-download routes, not row
+ * reads/writes that RLS alone can gate.
+ */
+export async function isManagerOrAdmin(
+  client: Parameters<Parameters<typeof withClaims>[1]>[0],
+  projectId?: string | null,
+): Promise<boolean> {
+  if (projectId) {
+    const result = await client.query(
+      `select (public.is_admin() or public.my_project_role($1) = 'manager') as ok`,
+      [projectId],
+    );
+    return result.rows[0]?.ok === true;
+  }
+  const result = await client.query(
+    `select (
+       public.is_admin()
+       or exists (
+         select 1 from public.project_members
+          where user_id = auth.uid() and project_role = 'manager'
+       )
+     ) as ok`,
+  );
+  return result.rows[0]?.ok === true;
+}
+
 export { withAnon };

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSessionUser, withSessionClaims } from "@/lib/auth";
+import { getSessionUser, withSessionClaims, isManagerOrAdmin } from "@/lib/auth";
 import { buildImportTemplateWorkbook } from "@/lib/excel";
 
 export async function GET(request: Request) {
@@ -13,6 +13,9 @@ export async function GET(request: Request) {
   }
 
   const lookups = await withSessionClaims(async (client) => {
+    if (!(await isManagerOrAdmin(client, sprintId))) {
+      return { forbidden: true as const };
+    }
     const taskTypes = await client.query(
       `select label from public.task_types where is_active order by sort_order`,
     );
@@ -33,6 +36,13 @@ export async function GET(request: Request) {
       members: members.rows.map((r) => r.full_name as string),
     };
   });
+
+  if ("forbidden" in lookups) {
+    return NextResponse.json(
+      { error: "Only an Admin or Manager can download the import template." },
+      { status: 403 },
+    );
+  }
 
   const buffer = await buildImportTemplateWorkbook(lookups);
 

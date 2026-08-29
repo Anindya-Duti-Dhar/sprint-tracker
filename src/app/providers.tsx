@@ -12,13 +12,19 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     <AppRouterCacheProvider options={{ key: "mui" }}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        {/* Global progress bar: page navigation, sprint/filter changes (router.push),
-            and anything else that triggers a route transition. */}
+        {/* Global loading indicator: page navigation, sprint/filter changes
+            (router.push), and anything else that triggers a route transition.
+            Rendered as a centered, colorful Material-style circular wheel
+            (via a custom template) instead of a top bar. */}
         <NextTopLoader
-          color="linear-gradient(90deg,#1F6F6B,#5FBDB4)"
-          height={3}
-          shadow="0 0 10px #5FBDB4, 0 0 5px #1F6F6B"
+          height={0}
+          shadow={false}
           showSpinner={false}
+          template={`
+            <div class="stt-loader-backdrop" role="status" aria-label="Loading">
+              <div class="stt-loader-wheel"></div>
+            </div>
+          `}
         />
         <LocalizationProvider dateAdapter={AdapterDateFns}>{children}</LocalizationProvider>
       </ThemeProvider>

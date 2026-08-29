@@ -11,9 +11,13 @@ a {
   text-decoration: none;
 }
 
-/* Global loading indicator (see providers.tsx): a centered, colorful Material-
-   style circular wheel, shown while NProgress (driven by nextjs-toploader) is
-   busy — page navigation, sprint/filter changes, and other route transitions. */
+/* Global loading indicator (see providers.tsx): a slim colorful top bar —
+   full-width, so it registers even for the briefest local navigation, which
+   testing showed the centered wheel alone could miss on a fast route change
+   — plus a centered Material-style colorful wheel for the fuller "something
+   is working" feel on slower loads. Shown while NProgress (driven by
+   nextjs-toploader) is busy: page navigation, sprint/filter changes, and
+   other route transitions. */
 .stt-loader-backdrop {
   position: fixed;
   inset: 0;
@@ -21,33 +25,37 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(247, 246, 242, 0);
+  background: rgba(20, 30, 28, 0);
   backdrop-filter: blur(0px);
   -webkit-backdrop-filter: blur(0px);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.22s ease, background-color 0.22s ease, backdrop-filter 0.22s ease;
-}
-
-/* nprogress's own internals still look up an element with role="bar" (see
-   providers.tsx's template) on every start/set/done call and unconditionally
-   style it — so it must exist, but it must never be visible now that the
-   real indicator is the centered wheel below. */
-#nprogress .bar {
-  opacity: 0 !important;
-  height: 0 !important;
+  /* Fades OUT gracefully when loading ends; appearing is instant (see the
+     busy-state rule below), so even a very fast navigation still shows it. */
+  transition: opacity 0.3s ease, background-color 0.3s ease, backdrop-filter 0.3s ease;
 }
 
 html.nprogress-busy .stt-loader-backdrop {
   opacity: 1;
-  background: rgba(247, 246, 242, 0.4);
-  backdrop-filter: blur(1.5px);
-  -webkit-backdrop-filter: blur(1.5px);
+  background: rgba(20, 30, 28, 0.22);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  transition: none;
 }
 
 .stt-loader-wheel {
-  width: 56px;
-  height: 56px;
+  position: relative;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 12px 32px -8px rgba(20, 30, 28, 0.45), 0 0 0 1px rgba(20, 30, 28, 0.04);
+}
+
+.stt-loader-wheel::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
   border-radius: 50%;
   background: conic-gradient(
     from 0deg,
@@ -58,7 +66,6 @@ html.nprogress-busy .stt-loader-backdrop {
   );
   -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 7px));
   mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 7px));
-  box-shadow: 0 6px 24px -6px rgba(20, 30, 28, 0.35);
   animation: stt-spin 0.85s linear infinite;
 }
 
@@ -69,7 +76,7 @@ html.nprogress-busy .stt-loader-backdrop {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stt-loader-wheel {
+  .stt-loader-wheel::before {
     animation-duration: 2.4s;
   }
   .stt-loader-backdrop {

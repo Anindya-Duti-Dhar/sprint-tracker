@@ -14,11 +14,14 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         <CssBaseline />
         {/* Global loading indicator: page navigation, sprint/filter changes
             (router.push), and anything else that triggers a route transition.
-            Rendered as a centered, colorful Material-style circular wheel
-            (via a custom template) instead of a top bar. */}
+            A slim colorful top bar (unmissable, spans the full width — the
+            part that reliably registers even for a fast local navigation)
+            plus a centered Material-style colorful wheel for the fuller
+            "something is working" feel on slower loads. */}
         <NextTopLoader
-          height={0}
-          shadow={false}
+          color="linear-gradient(90deg,#4285F4,#EA4335,#FBBC05,#34A853)"
+          height={3}
+          shadow="0 0 10px rgba(66,133,244,0.6), 0 0 4px rgba(234,67,53,0.5)"
           showSpinner={false}
           template={`
             <div class="bar" role="bar"><div class="peg"></div></div>

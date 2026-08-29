@@ -114,10 +114,18 @@ export async function upsertProject(values: ProjectFormValues): Promise<ActionRe
   const v = parsed.data;
   try {
     await withSessionClaims(async (client) => {
-      const cols = ["name", "is_active", ...DATE_COLUMNS.map(([, col]) => col)];
+      const cols = [
+        "name",
+        "is_active",
+        "sprint_poc_id",
+        "assistant_poc_id",
+        ...DATE_COLUMNS.map(([, col]) => col),
+      ];
       const vals: unknown[] = [
         v.name,
         v.isActive,
+        nullable(v.sprintPocId),
+        nullable(v.assistantPocId),
         ...DATE_COLUMNS.map(([key]) => nullable(v[key as keyof ProjectFormValues] as string | null)),
       ];
 

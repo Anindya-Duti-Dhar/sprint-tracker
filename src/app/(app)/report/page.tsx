@@ -1,4 +1,5 @@
-import { withSessionClaims, isManagerOrAdmin } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { getSessionUser, withSessionClaims, isManagerOrAdmin } from "@/lib/auth";
 import ReportClient from "@/components/ReportClient";
 
 export default async function ReportPage({
@@ -6,6 +7,9 @@ export default async function ReportPage({
 }: {
   searchParams: Promise<{ sprint?: string }>;
 }) {
+  const user = await getSessionUser();
+  if (!user) redirect("/login");
+
   const sp = await searchParams;
 
   const data = await withSessionClaims(async (client) => {

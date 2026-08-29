@@ -33,6 +33,13 @@ export async function POST(request: Request) {
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "Choose a file to upload." }, { status: 400 });
   }
+  const MAX_IMPORT_BYTES = 5 * 1024 * 1024; // 5 MB — generous for a task-list workbook
+  if (file.size > MAX_IMPORT_BYTES) {
+    return NextResponse.json(
+      { error: "That file is too large (5 MB max). Split it into smaller batches." },
+      { status: 413 },
+    );
+  }
 
   const allowed = await withSessionClaims((client) => isManagerOrAdmin(client, sprintId));
   if (!allowed) {

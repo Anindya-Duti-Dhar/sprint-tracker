@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   AppBar,
   Toolbar,
@@ -51,6 +51,7 @@ export default function AppShell({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const reduceMotion = useReducedMotion();
   const [scrolled, setScrolled] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
@@ -230,7 +231,14 @@ export default function AppShell({
       </AppBar>
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        {children}
+        <motion.div
+          key={pathname}
+          initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, ease: "easeOut" }}
+        >
+          {children}
+        </motion.div>
       </Container>
 
       <EntryFormDialog

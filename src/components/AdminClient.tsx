@@ -325,6 +325,8 @@ function toProjectFormValues(p: Project | null, members: Member[]): ProjectFormV
     isActive: p?.is_active ?? false,
     memberIds,
     memberRoles,
+    sprintPocId: (p?.sprint_poc_id as string | null) ?? "",
+    assistantPocId: (p?.assistant_poc_id as string | null) ?? "",
   } as ProjectFormValues;
 }
 
@@ -340,6 +342,7 @@ function SprintsPanel({
   const [dialogProject, setDialogProject] = useState<Project | null | undefined>(undefined);
 
   const fmt = (v: unknown) => (v ? new Date(v as string).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) : "—");
+  const userName = (id: unknown) => users.find((u) => u.id === id)?.full_name ?? "—";
 
   return (
     <Stack spacing={2.5}>
@@ -356,6 +359,8 @@ function SprintsPanel({
               <TableCell>Status</TableCell>
               <TableCell>Dev Start</TableCell>
               <TableCell>Dev End</TableCell>
+              <TableCell>Sprint POC</TableCell>
+              <TableCell>Assistant POC</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -372,6 +377,8 @@ function SprintsPanel({
                 </TableCell>
                 <TableCell>{fmt(p.dev_start_date)}</TableCell>
                 <TableCell>{fmt(p.dev_end_date)}</TableCell>
+                <TableCell>{userName(p.sprint_poc_id)}</TableCell>
+                <TableCell>{userName(p.assistant_poc_id)}</TableCell>
                 <TableCell align="right">
                   <IconButton size="small" onClick={() => setDialogProject(p)}>
                     <EditIcon fontSize="small" />
@@ -421,6 +428,9 @@ function SprintDialog({
 
   const memberIds = watch("memberIds") ?? [];
   const memberRoles = watch("memberRoles") ?? {};
+  const sprintPocId = watch("sprintPocId") ?? "";
+  const assistantPocId = watch("assistantPocId") ?? "";
+  const pocOptions = users.filter((u) => memberIds.includes(u.id));
 
   function toggleMember(userId: string) {
     if (memberIds.includes(userId)) {
@@ -428,6 +438,9 @@ function SprintDialog({
         "memberIds",
         memberIds.filter((id) => id !== userId),
       );
+      // A POC must be a current member — drop the selection along with them.
+      if (sprintPocId === userId) setValue("sprintPocId", "");
+      if (assistantPocId === userId) setValue("assistantPocId", "");
     } else {
       setValue("memberIds", [...memberIds, userId]);
       if (!memberRoles[userId]) {
@@ -537,6 +550,52 @@ function SprintDialog({
                 );
               })}
             </Stack>
+
+            <Divider>Points of contact</Divider>
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  select
+                  label="Sprint POC"
+                  fullWidth
+                  size="small"
+                  disabled={pocOptions.length === 0}
+                  value={sprintPocId}
+                  onChange={(e) => setValue("sprintPocId", e.target.value)}
+                  helperText={
+                    pocOptions.length === 0
+                      ? "Add members above first"
+                      : "Shown on the Dashboard's Sprint Details card"
+                  }
+                >
+                  <MenuItem value="">—</MenuItem>
+                  {pocOptions.map((u) => (
+                    <MenuItem key={u.id} value={u.id}>
+                      {u.full_name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  select
+                  label="Assistant POC"
+                  fullWidth
+                  size="small"
+                  disabled={pocOptions.length === 0}
+                  value={assistantPocId}
+                  onChange={(e) => setValue("assistantPocId", e.target.value)}
+                  helperText={pocOptions.length === 0 ? "Add members above first" : undefined}
+                >
+                  <MenuItem value="">—</MenuItem>
+                  {pocOptions.map((u) => (
+                    <MenuItem key={u.id} value={u.id}>
+                      {u.full_name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+            </Grid>
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, py: 2 }}>

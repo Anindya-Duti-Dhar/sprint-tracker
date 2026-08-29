@@ -3,6 +3,13 @@ import { cookies } from "next/headers";
 import { withAnon, withClaims } from "./db";
 
 const COOKIE_NAME = "st_session";
+// Fail loudly rather than silently signing session tokens with a known,
+// public fallback secret if this ever ships to production without
+// AUTH_JWT_SECRET configured (Phase 10 hardening) — local dev keeps working
+// without setting it.
+if (process.env.NODE_ENV === "production" && !process.env.AUTH_JWT_SECRET) {
+  throw new Error("AUTH_JWT_SECRET must be set in production.");
+}
 const SECRET = process.env.AUTH_JWT_SECRET ?? "insecure-dev-secret";
 
 export type SessionUser = {

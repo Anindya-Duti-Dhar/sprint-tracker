@@ -113,6 +113,8 @@ export const projectSchema = z.object({
   commercialReleaseDate: optionalDateString,
   memberIds: z.array(z.string().uuid()),
   memberRoles: z.record(z.string(), z.enum(PROJECT_ROLES)),
+  sprintPocId: z.string().uuid().optional().or(z.literal("")).nullable(),
+  assistantPocId: z.string().uuid().optional().or(z.literal("")).nullable(),
 });
 export type ProjectFormValues = z.infer<typeof projectSchema>;
 

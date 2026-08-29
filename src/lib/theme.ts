@@ -46,6 +46,41 @@ const theme = createTheme({
         },
       },
     },
+    // Phase 9 motion pass: a subtle press-down on every clickable control
+    // (buttons, icon buttons, menu items, tabs, chips) so interactions feel
+    // tactile rather than static, without touching layout/spacing anywhere.
+    MuiButtonBase: {
+      styleOverrides: {
+        root: {
+          transition: "transform .12s cubic-bezier(.2,.8,.2,1)",
+          "&:active": { transform: "scale(0.96)" },
+          "@media (prefers-reduced-motion: reduce)": {
+            transition: "none",
+            "&:active": { transform: "none" },
+          },
+        },
+      },
+    },
+    MuiDialog: {
+      defaultProps: {
+        transitionDuration: { enter: 260, exit: 160 },
+      },
+      styleOverrides: {
+        paper: { borderRadius: 14 },
+      },
+    },
+    MuiTableRow: {
+      styleOverrides: {
+        root: {
+          transition: "background-color .15s ease",
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: { transition: "background-color .2s ease, transform .12s ease" },
+      },
+    },
   },
 });
 

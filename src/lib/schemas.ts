@@ -18,7 +18,7 @@ export const entrySchema = z.object({
   assigneeId: z.string().uuid("Choose an assignee."),
   androidPocId: z.string().uuid().optional().or(z.literal("")).nullable(),
   hours: z
-    .number({ invalid_type_error: "Enter hours." })
+    .number({ error: "Enter hours." })
     .min(0.5, "Hours must be at least 0.5.")
     .max(13, "Hours must be 13 or fewer.")
     .refine((v) => Math.round(v * 2) === v * 2, "Hours must be in 0.5 steps."),

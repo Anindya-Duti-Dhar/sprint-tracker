@@ -29,6 +29,15 @@ a {
   transition: opacity 0.22s ease, background-color 0.22s ease, backdrop-filter 0.22s ease;
 }
 
+/* nprogress's own internals still look up an element with role="bar" (see
+   providers.tsx's template) on every start/set/done call and unconditionally
+   style it — so it must exist, but it must never be visible now that the
+   real indicator is the centered wheel below. */
+#nprogress .bar {
+  opacity: 0 !important;
+  height: 0 !important;
+}
+
 html.nprogress-busy .stt-loader-backdrop {
   opacity: 1;
   background: rgba(247, 246, 242, 0.4);

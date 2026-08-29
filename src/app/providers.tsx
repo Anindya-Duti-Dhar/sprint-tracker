@@ -21,6 +21,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           shadow={false}
           showSpinner={false}
           template={`
+            <div class="bar" role="bar"><div class="peg"></div></div>
             <div class="stt-loader-backdrop" role="status" aria-label="Loading">
               <div class="stt-loader-wheel"></div>
             </div>

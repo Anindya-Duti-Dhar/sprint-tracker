@@ -55,6 +55,21 @@ type EntryRow = {
   android_poc_name: string | null;
 };
 
+// Sticky header cells, pinned to the top of the table's own scroll pane (see
+// the Paper's maxHeight/overflow below) rather than to the page — a table
+// that also needs to scroll horizontally can't have its header stick to
+// page-level scroll purely in CSS (the horizontal-scroll container becomes
+// the sticky reference for both axes), so the table gets a bounded height
+// and scrolls internally instead, same as MUI's own sticky-header pattern.
+// Given an opaque background so scrolled rows don't show through underneath.
+const stickyHeadCellSx = {
+  position: "sticky" as const,
+  top: 0,
+  zIndex: 2,
+  bgcolor: "background.paper",
+  whiteSpace: "nowrap",
+};
+
 export default function TaskListClient({
   projects,
   taskTypes,
@@ -256,20 +271,20 @@ export default function TaskListClient({
           </Button>
         </Paper>
       ) : (
-        <Paper sx={{ overflowX: "auto" }}>
-          <Table size="small">
+        <Paper sx={{ overflow: "auto", maxHeight: "70vh" }}>
+          <Table size="small" stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell>Feature</TableCell>
-                <TableCell>Task Type</TableCell>
-                <TableCell>Task</TableCell>
-                <TableCell>Assignee</TableCell>
-                <TableCell>Android POC</TableCell>
-                <TableCell align="right">Hrs</TableCell>
-                <TableCell>Activity</TableCell>
-                <TableCell>Test Build Date</TableCell>
-                <TableCell>Remark</TableCell>
-                <TableCell align="right">Actions</TableCell>
+                <TableCell sx={stickyHeadCellSx}>Feature</TableCell>
+                <TableCell sx={stickyHeadCellSx}>Task Type</TableCell>
+                <TableCell sx={stickyHeadCellSx}>Task</TableCell>
+                <TableCell sx={stickyHeadCellSx}>Assignee</TableCell>
+                <TableCell sx={stickyHeadCellSx}>Android POC</TableCell>
+                <TableCell align="right" sx={stickyHeadCellSx}>Hrs</TableCell>
+                <TableCell sx={stickyHeadCellSx}>Activity</TableCell>
+                <TableCell sx={stickyHeadCellSx}>Test Build Date</TableCell>
+                <TableCell sx={stickyHeadCellSx}>Remark</TableCell>
+                <TableCell align="right" sx={stickyHeadCellSx}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

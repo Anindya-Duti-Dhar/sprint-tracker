@@ -28,8 +28,7 @@ export type DashboardData = {
   remainingCapacity: number;
   memberCount: number;
   workdays: number;
-  byMember: { name: string; hours: number }[];
-  deadlineLabel: string | null;
+  byMember: { name: string; hours: number; avatarUrl: string | null }[];
   milestones: { label: string; date: string | null }[];
   sprintPocName: string | null;
   sprintPocAvatarUrl: string | null;
@@ -148,10 +147,30 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
                 <Stack
                   key={m.name}
                   direction="row"
-                  sx={{ justifyContent: "space-between", py: 0.75 }}
+                  sx={{ justifyContent: "space-between", alignItems: "center", py: 0.75 }}
                 >
-                  <Typography variant="body2">{m.name}</Typography>
-                  <Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+                  <Stack direction="row" spacing={1} sx={{ alignItems: "center", minWidth: 0 }}>
+                    <Avatar
+                      src={m.avatarUrl ?? undefined}
+                      sx={{
+                        width: 24,
+                        height: 24,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        bgcolor: "rgba(31,111,107,0.12)",
+                        color: "#1F6F6B",
+                      }}
+                    >
+                      {initials(m.name)}
+                    </Avatar>
+                    <Typography variant="body2" noWrap>
+                      {m.name}
+                    </Typography>
+                  </Stack>
+                  <Typography
+                    variant="body2"
+                    sx={{ fontVariantNumeric: "tabular-nums", flexShrink: 0, pl: 1 }}
+                  >
                     {m.hours.toFixed(1)}h
                   </Typography>
                 </Stack>
@@ -159,59 +178,42 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
             </Stack>
           </Paper>
         </Grid>
-      </Grid>
 
-      <Box component={motion.div} {...cardMotion(6)}>
-        <Paper
-          sx={{
-            p: 2.5,
-            background: "linear-gradient(135deg, #EEF3F4 0%, #F9FBFB 45%, #FFFFFF 100%)",
-          }}
-        >
-          <Stack
-            direction={{ xs: "column", md: "row" }}
-            spacing={{ xs: 2.5, md: 4 }}
-            sx={{ alignItems: { xs: "stretch", md: "center" } }}
+        <Grid size={{ xs: 12, sm: 6, md: 4 }} component={motion.div} {...cardMotion(6)}>
+          <Paper
+            sx={{
+              p: 2.5,
+              height: "100%",
+              background: "linear-gradient(135deg, #EEF3F4 0%, #F9FBFB 45%, #FFFFFF 100%)",
+            }}
           >
-            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", minWidth: 200 }}>
+            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
               <Box
                 sx={{
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: 44,
-                  height: 44,
-                  borderRadius: "14px",
+                  width: 36,
+                  height: 36,
+                  borderRadius: "12px",
                   bgcolor: "rgba(255,255,255,0.75)",
                   color: "#46595A",
-                  fontSize: 24,
+                  fontSize: 20,
                   boxShadow: "0 2px 8px -2px rgba(20,30,28,0.18)",
                   flexShrink: 0,
                 }}
               >
                 <FlagOutlinedIcon fontSize="inherit" />
               </Box>
-              <Box>
-                <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0.5 }}>
-                  Sprint details
-                </Typography>
-                <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-                  {data.projectName}
-                </Typography>
-                {data.deadlineLabel && (
-                  <Typography variant="body2" color="text.secondary">
-                    Deadline: {data.deadlineLabel}
-                  </Typography>
-                )}
-              </Box>
+              <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0.5 }}>
+                Milestones
+              </Typography>
             </Stack>
-
-            <Divider orientation="vertical" flexItem sx={{ display: { xs: "none", md: "block" } }} />
-
             <Stack
               direction="row"
               spacing={1}
-              sx={{ flexWrap: "wrap", gap: 1, flexGrow: 1, rowGap: 1 }}
+              useFlexGap
+              sx={{ flexWrap: "wrap", rowGap: 1 }}
             >
               {data.milestones.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
@@ -229,15 +231,21 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
                 ))
               )}
             </Stack>
+          </Paper>
+        </Grid>
 
-            <Divider orientation="vertical" flexItem sx={{ display: { xs: "none", md: "block" } }} />
-
-            <Stack
-              direction="row"
-              spacing={2.5}
-              useFlexGap
-              sx={{ flexWrap: "wrap", rowGap: 1.5 }}
-            >
+        <Grid size={{ xs: 12, sm: 6, md: 4 }} component={motion.div} {...cardMotion(7)}>
+          <Paper
+            sx={{
+              p: 2.5,
+              height: "100%",
+              background: "linear-gradient(135deg, #EEF3F4 0%, #F9FBFB 45%, #FFFFFF 100%)",
+            }}
+          >
+            <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0.5 }}>
+              Points of contact
+            </Typography>
+            <Stack spacing={1.5} sx={{ mt: 1.5 }}>
               {[
                 {
                   role: "Sprint POC",
@@ -252,7 +260,7 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
                   color: "#6A4FB2",
                 },
               ].map(({ role, name, avatarUrl, color }) => (
-                <Stack key={role} direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                <Stack key={role} direction="row" spacing={1.25} sx={{ alignItems: "center" }}>
                   <Tooltip title={role}>
                     <Avatar
                       src={avatarUrl ?? undefined}
@@ -272,23 +280,20 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
                     <Typography
                       variant="caption"
                       color="text.secondary"
-                      sx={{ display: "block", lineHeight: 1.2, whiteSpace: "nowrap" }}
+                      sx={{ display: "block", lineHeight: 1.2 }}
                     >
                       {role}
                     </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ fontWeight: 600, lineHeight: 1.3, whiteSpace: "nowrap" }}
-                    >
+                    <Typography variant="body2" noWrap sx={{ fontWeight: 600, lineHeight: 1.3 }}>
                       {name ?? "Not assigned"}
                     </Typography>
                   </Box>
                 </Stack>
               ))}
             </Stack>
-          </Stack>
-        </Paper>
-      </Box>
+          </Paper>
+        </Grid>
+      </Grid>
     </Stack>
   );
 }

@@ -31,12 +31,12 @@ export default async function DashboardPage() {
       [p.id],
     );
     const byMember = await client.query(
-      `select pr.full_name, coalesce(sum(e.hours),0) as total
+      `select pr.full_name, pr.avatar_url, coalesce(sum(e.hours),0) as total
          from public.project_members pm
          join public.profiles pr on pr.id = pm.user_id
          left join public.entries e on e.assignee_id = pr.id and e.project_id = $1
         where pm.project_id = $1
-        group by pr.full_name
+        group by pr.id, pr.full_name, pr.avatar_url
         order by total desc`,
       [p.id],
     );
@@ -51,6 +51,7 @@ export default async function DashboardPage() {
       byMember: byMember.rows.map((r) => ({
         name: r.full_name as string,
         hours: Number(r.total),
+        avatarUrl: (r.avatar_url as string | null) ?? null,
       })),
       memberCount: Number(memberCount.rows[0].n),
     };
@@ -107,7 +108,6 @@ export default async function DashboardPage() {
         memberCount,
         workdays,
         byMember,
-        deadlineLabel: fmt(project.dev_end_date),
         milestones,
         sprintPocName: (project.sprint_poc_name as string | null) ?? null,
         sprintPocAvatarUrl: (project.sprint_poc_avatar_url as string | null) ?? null,

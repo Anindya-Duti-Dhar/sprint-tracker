@@ -58,240 +58,251 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
       </Box>
 
       <Grid container spacing={2}>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }} component={motion.div} {...cardMotion(0)}>
-          <StatCard
-            label="Current sprint"
-            accent="teal"
-            icon={<RocketLaunchOutlinedIcon fontSize="inherit" />}
-            valueNode={
-              <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                {data.projectName}
-              </Typography>
-            }
-          >
-            <Chip
-              size="small"
-              label={data.status}
-              color={STATUS_COLOR[data.status]}
-              sx={{ mr: 1, transition: "background-color .25s ease" }}
-            />
-            <Typography component="span" variant="body2" color="text.secondary">
-              Dev {data.devStartLabel} – {data.devEndLabel}
-            </Typography>
-          </StatCard>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }} component={motion.div} {...cardMotion(1)}>
-          <StatCard
-            label="Days remaining"
-            accent="amber"
-            icon={<EventAvailableOutlinedIcon fontSize="inherit" />}
-            valueNode={
-              <Typography variant="h4" sx={{ fontWeight: 800 }}>
-                {data.remaining ?? "—"}{" "}
-                <Typography component="span" variant="body2" color="text.secondary">
-                  days
-                </Typography>
-              </Typography>
-            }
-          >
-            Counted between Dev Start and Dev End
-          </StatCard>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }} component={motion.div} {...cardMotion(2)}>
-          <StatCard
-            label="Total hours logged"
-            value={data.totalHours}
-            decimals={1}
-            accent="slate"
-            icon={<ScheduleOutlinedIcon fontSize="inherit" />}
-          >
-            Across all entries this sprint
-          </StatCard>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }} component={motion.div} {...cardMotion(3)}>
-          <StatCard
-            label="Team capacity"
-            value={data.capacity}
-            decimals={1}
-            accent="violet"
-            icon={<GroupsOutlinedIcon fontSize="inherit" />}
-          >
-            {data.memberCount} members × {data.workdays} working days × 6.5h
-          </StatCard>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }} component={motion.div} {...cardMotion(4)}>
-          <StatCard
-            label="Remaining capacity"
-            value={data.remainingCapacity}
-            decimals={1}
-            accent="rose"
-            icon={<DonutLargeOutlinedIcon fontSize="inherit" />}
-          >
-            Capacity − hours logged
-          </StatCard>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }} component={motion.div} {...cardMotion(5)}>
-          <Paper
-            sx={{
-              p: 2.5,
-              height: "100%",
-              background:
-                "linear-gradient(160deg, #F3F6F5 0%, #FAFBFA 55%, #FFFFFF 100%)",
-            }}
-          >
-            <Typography variant="overline" color="text.secondary">
-              Hours by member
-            </Typography>
-            <Stack divider={<Divider />} sx={{ mt: 1 }}>
-              {data.byMember.map((m) => (
-                <Stack
-                  key={m.name}
-                  direction="row"
-                  sx={{ justifyContent: "space-between", alignItems: "center", py: 0.75 }}
-                >
-                  <Stack direction="row" spacing={1} sx={{ alignItems: "center", minWidth: 0 }}>
-                    <Avatar
-                      src={m.avatarUrl ?? undefined}
-                      sx={{
-                        width: 24,
-                        height: 24,
-                        fontSize: 11,
-                        fontWeight: 700,
-                        bgcolor: "rgba(31,111,107,0.12)",
-                        color: "#1F6F6B",
-                      }}
-                    >
-                      {initials(m.name)}
-                    </Avatar>
-                    <Typography variant="body2" noWrap>
-                      {m.name}
-                    </Typography>
-                  </Stack>
-                  <Typography
-                    variant="body2"
-                    sx={{ fontVariantNumeric: "tabular-nums", flexShrink: 0, pl: 1 }}
-                  >
-                    {m.hours.toFixed(1)}h
+        {/* Left block: 3 rows x 2 columns */}
+        <Grid size={{ xs: 12, md: 8 }}>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6 }} component={motion.div} {...cardMotion(0)}>
+              <StatCard
+                label="Current sprint"
+                accent="teal"
+                icon={<RocketLaunchOutlinedIcon fontSize="inherit" />}
+                valueNode={
+                  <Typography variant="h5" sx={{ fontWeight: 800 }}>
+                    {data.projectName}
                   </Typography>
-                </Stack>
-              ))}
-            </Stack>
-          </Paper>
-        </Grid>
+                }
+              >
+                <Chip
+                  size="small"
+                  label={data.status}
+                  color={STATUS_COLOR[data.status]}
+                  sx={{ mr: 1, transition: "background-color .25s ease" }}
+                />
+                <Typography component="span" variant="body2" color="text.secondary">
+                  Dev {data.devStartLabel} – {data.devEndLabel}
+                </Typography>
+              </StatCard>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }} component={motion.div} {...cardMotion(1)}>
+              <StatCard
+                label="Days remaining"
+                accent="amber"
+                icon={<EventAvailableOutlinedIcon fontSize="inherit" />}
+                valueNode={
+                  <Typography variant="h4" sx={{ fontWeight: 800 }}>
+                    {data.remaining ?? "—"}{" "}
+                    <Typography component="span" variant="body2" color="text.secondary">
+                      days
+                    </Typography>
+                  </Typography>
+                }
+              >
+                Counted between Dev Start and Dev End
+              </StatCard>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }} component={motion.div} {...cardMotion(3)}>
+              <StatCard
+                label="Team capacity"
+                value={data.capacity}
+                decimals={1}
+                accent="violet"
+                icon={<GroupsOutlinedIcon fontSize="inherit" />}
+              >
+                {data.memberCount} members × {data.workdays} working days × 6.5h
+              </StatCard>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }} component={motion.div} {...cardMotion(4)}>
+              <StatCard
+                label="Remaining capacity"
+                value={data.remainingCapacity}
+                decimals={1}
+                accent="rose"
+                icon={<DonutLargeOutlinedIcon fontSize="inherit" />}
+              >
+                Capacity − hours logged
+              </StatCard>
+            </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 4 }} component={motion.div} {...cardMotion(6)}>
-          <Paper
-            sx={{
-              p: 2.5,
-              height: "100%",
-              background: "linear-gradient(135deg, #EEF3F4 0%, #F9FBFB 45%, #FFFFFF 100%)",
-            }}
-          >
-            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
-              <Box
+            <Grid size={{ xs: 12, sm: 6 }} component={motion.div} {...cardMotion(6)}>
+              <Paper
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: 36,
-                  height: 36,
-                  borderRadius: "12px",
-                  bgcolor: "rgba(255,255,255,0.75)",
-                  color: "#46595A",
-                  fontSize: 20,
-                  boxShadow: "0 2px 8px -2px rgba(20,30,28,0.18)",
-                  flexShrink: 0,
+                  p: 2.5,
+                  height: "100%",
+                  background: "linear-gradient(135deg, #EEF3F4 0%, #F9FBFB 45%, #FFFFFF 100%)",
                 }}
               >
-                <FlagOutlinedIcon fontSize="inherit" />
-              </Box>
-              <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0.5 }}>
-                Milestones
-              </Typography>
-            </Stack>
-            <Stack
-              direction="row"
-              spacing={1}
-              useFlexGap
-              sx={{ flexWrap: "wrap", rowGap: 1 }}
-            >
-              {data.milestones.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  No milestone dates set yet.
+                <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 36,
+                      height: 36,
+                      borderRadius: "12px",
+                      bgcolor: "rgba(255,255,255,0.75)",
+                      color: "#46595A",
+                      fontSize: 20,
+                      boxShadow: "0 2px 8px -2px rgba(20,30,28,0.18)",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <FlagOutlinedIcon fontSize="inherit" />
+                  </Box>
+                  <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0.5 }}>
+                    Milestones
+                  </Typography>
+                </Stack>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  useFlexGap
+                  sx={{ flexWrap: "wrap", rowGap: 1 }}
+                >
+                  {data.milestones.length === 0 ? (
+                    <Typography variant="body2" color="text.secondary">
+                      No milestone dates set yet.
+                    </Typography>
+                  ) : (
+                    data.milestones.map((m) => (
+                      <Chip
+                        key={m.label}
+                        size="small"
+                        variant="outlined"
+                        label={`${m.label}: ${m.date}`}
+                        sx={{ bgcolor: "rgba(255,255,255,0.6)" }}
+                      />
+                    ))
+                  )}
+                </Stack>
+              </Paper>
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }} component={motion.div} {...cardMotion(7)}>
+              <Paper
+                sx={{
+                  p: 2.5,
+                  height: "100%",
+                  background: "linear-gradient(135deg, #EEF3F4 0%, #F9FBFB 45%, #FFFFFF 100%)",
+                }}
+              >
+                <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0.5 }}>
+                  Points of contact
                 </Typography>
-              ) : (
-                data.milestones.map((m) => (
-                  <Chip
-                    key={m.label}
-                    size="small"
-                    variant="outlined"
-                    label={`${m.label}: ${m.date}`}
-                    sx={{ bgcolor: "rgba(255,255,255,0.6)" }}
-                  />
-                ))
-              )}
-            </Stack>
-          </Paper>
+                <Stack spacing={1.5} sx={{ mt: 1.5 }}>
+                  {[
+                    {
+                      role: "Sprint POC",
+                      name: data.sprintPocName,
+                      avatarUrl: data.sprintPocAvatarUrl,
+                      color: "#1F6F6B",
+                    },
+                    {
+                      role: "Assistant POC",
+                      name: data.assistantPocName,
+                      avatarUrl: data.assistantPocAvatarUrl,
+                      color: "#6A4FB2",
+                    },
+                  ].map(({ role, name, avatarUrl, color }) => (
+                    <Stack key={role} direction="row" spacing={1.25} sx={{ alignItems: "center" }}>
+                      <Tooltip title={role}>
+                        <Avatar
+                          src={avatarUrl ?? undefined}
+                          sx={{
+                            width: 36,
+                            height: 36,
+                            bgcolor: name ? color : "rgba(0,0,0,0.08)",
+                            color: name ? "#fff" : "text.disabled",
+                            fontSize: 14,
+                            fontWeight: 700,
+                          }}
+                        >
+                          {name ? initials(name) : <PersonOutlineOutlinedIcon fontSize="small" />}
+                        </Avatar>
+                      </Tooltip>
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ display: "block", lineHeight: 1.2 }}
+                        >
+                          {role}
+                        </Typography>
+                        <Typography variant="body2" noWrap sx={{ fontWeight: 600, lineHeight: 1.3 }}>
+                          {name ?? "Not assigned"}
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  ))}
+                </Stack>
+              </Paper>
+            </Grid>
+          </Grid>
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 4 }} component={motion.div} {...cardMotion(7)}>
-          <Paper
-            sx={{
-              p: 2.5,
-              height: "100%",
-              background: "linear-gradient(135deg, #EEF3F4 0%, #F9FBFB 45%, #FFFFFF 100%)",
-            }}
-          >
-            <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0.5 }}>
-              Points of contact
-            </Typography>
-            <Stack spacing={1.5} sx={{ mt: 1.5 }}>
-              {[
-                {
-                  role: "Sprint POC",
-                  name: data.sprintPocName,
-                  avatarUrl: data.sprintPocAvatarUrl,
-                  color: "#1F6F6B",
-                },
-                {
-                  role: "Assistant POC",
-                  name: data.assistantPocName,
-                  avatarUrl: data.assistantPocAvatarUrl,
-                  color: "#6A4FB2",
-                },
-              ].map(({ role, name, avatarUrl, color }) => (
-                <Stack key={role} direction="row" spacing={1.25} sx={{ alignItems: "center" }}>
-                  <Tooltip title={role}>
-                    <Avatar
-                      src={avatarUrl ?? undefined}
-                      sx={{
-                        width: 36,
-                        height: 36,
-                        bgcolor: name ? color : "rgba(0,0,0,0.08)",
-                        color: name ? "#fff" : "text.disabled",
-                        fontSize: 14,
-                        fontWeight: 700,
-                      }}
+        {/* Right column: Total hours logged + Hours by member, stacked to match the left block's height */}
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Stack spacing={2} sx={{ height: "100%" }}>
+            <Box component={motion.div} {...cardMotion(2)}>
+              <StatCard
+                label="Total hours logged"
+                value={data.totalHours}
+                decimals={1}
+                accent="slate"
+                icon={<ScheduleOutlinedIcon fontSize="inherit" />}
+              >
+                Across all entries this sprint
+              </StatCard>
+            </Box>
+            <Box component={motion.div} {...cardMotion(5)} sx={{ flexGrow: 1 }}>
+              <Paper
+                sx={{
+                  p: 2.5,
+                  height: "100%",
+                  background:
+                    "linear-gradient(160deg, #F3F6F5 0%, #FAFBFA 55%, #FFFFFF 100%)",
+                }}
+              >
+                <Typography variant="overline" color="text.secondary">
+                  Hours by member
+                </Typography>
+                <Stack divider={<Divider />} sx={{ mt: 1 }}>
+                  {data.byMember.map((m) => (
+                    <Stack
+                      key={m.name}
+                      direction="row"
+                      sx={{ justifyContent: "space-between", alignItems: "center", py: 0.75 }}
                     >
-                      {name ? initials(name) : <PersonOutlineOutlinedIcon fontSize="small" />}
-                    </Avatar>
-                  </Tooltip>
-                  <Box sx={{ minWidth: 0 }}>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ display: "block", lineHeight: 1.2 }}
-                    >
-                      {role}
-                    </Typography>
-                    <Typography variant="body2" noWrap sx={{ fontWeight: 600, lineHeight: 1.3 }}>
-                      {name ?? "Not assigned"}
-                    </Typography>
-                  </Box>
+                      <Stack direction="row" spacing={1} sx={{ alignItems: "center", minWidth: 0 }}>
+                        <Avatar
+                          src={m.avatarUrl ?? undefined}
+                          sx={{
+                            width: 24,
+                            height: 24,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            bgcolor: "rgba(31,111,107,0.12)",
+                            color: "#1F6F6B",
+                          }}
+                        >
+                          {initials(m.name)}
+                        </Avatar>
+                        <Typography variant="body2" noWrap>
+                          {m.name}
+                        </Typography>
+                      </Stack>
+                      <Typography
+                        variant="body2"
+                        sx={{ fontVariantNumeric: "tabular-nums", flexShrink: 0, pl: 1 }}
+                      >
+                        {m.hours.toFixed(1)}h
+                      </Typography>
+                    </Stack>
+                  ))}
                 </Stack>
-              ))}
-            </Stack>
-          </Paper>
+              </Paper>
+            </Box>
+          </Stack>
         </Grid>
       </Grid>
     </Stack>

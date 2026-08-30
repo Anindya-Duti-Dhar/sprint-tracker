@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { randomUUID } from "crypto";
 import { cookies } from "next/headers";
 import { withAnon, withClaims } from "./db";
 
@@ -11,6 +12,7 @@ if (process.env.NODE_ENV === "production" && !process.env.AUTH_JWT_SECRET) {
   throw new Error("AUTH_JWT_SECRET must be set in production.");
 }
 const SECRET = process.env.AUTH_JWT_SECRET ?? "insecure-dev-secret";
+const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7; // 7 days — one shared source of truth
 
 export type SessionUser = {
   id: string;
@@ -20,8 +22,11 @@ export type SessionUser = {
   avatarUrl: string | null;
 };
 
-export function signSessionToken(userId: string): string {
-  return jwt.sign({ sub: userId }, SECRET, { expiresIn: "7d" });
+/** sessionId identifies one row in public.login_sessions (see recordLogin). */
+export function signSessionToken(userId: string, sessionId: string): string {
+  return jwt.sign({ sub: userId, sid: sessionId }, SECRET, {
+    expiresIn: SESSION_MAX_AGE_SECONDS,
+  });
 }
 
 export async function setSessionCookie(token: string) {
@@ -31,7 +36,7 @@ export async function setSessionCookie(token: string) {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: SESSION_MAX_AGE_SECONDS,
   });
 }
 
@@ -41,14 +46,65 @@ export async function clearSessionCookie() {
 }
 
 async function currentUserId(): Promise<string | null> {
+  const session = await currentSession();
+  return session?.userId ?? null;
+}
+
+/** The signed-in user's id and login_sessions row id, or null if not authenticated. */
+async function currentSession(): Promise<{ userId: string; sessionId: string | null } | null> {
   const store = await cookies();
   const token = store.get(COOKIE_NAME)?.value;
   if (!token) return null;
   try {
-    const payload = jwt.verify(token, SECRET) as { sub: string };
-    return payload.sub;
+    const payload = jwt.verify(token, SECRET) as { sub: string; sid?: string };
+    return { userId: payload.sub, sessionId: payload.sid ?? null };
   } catch {
     return null;
+  }
+}
+
+/**
+ * Opens a login_sessions row for this user and returns its id, to embed in
+ * the JWT so logout (recordLogout) can close the exact same row — a user
+ * can be logged in from more than one device/browser at once, each with its
+ * own session row. Never throws: a logging-in user must not be blocked from
+ * reaching the app just because the session log insert failed.
+ */
+export async function recordLogin(
+  userId: string,
+  ipAddress: string | null,
+  userAgent: string | null,
+): Promise<string> {
+  const sessionId = randomUUID();
+  try {
+    await withClaims({ sub: userId, role: "authenticated" }, (client) =>
+      client.query(
+        `insert into public.login_sessions (id, user_id, expires_at, ip_address, user_agent)
+         values ($1, $2, now() + make_interval(secs => $3), $4, $5)`,
+        [sessionId, userId, SESSION_MAX_AGE_SECONDS, ipAddress, userAgent],
+      ),
+    );
+  } catch {
+    // Session tracking is a nice-to-have for Admin visibility, not a gate on
+    // login — swallow so a DB hiccup here never locks a legitimate user out.
+  }
+  return sessionId;
+}
+
+/** Closes out the login_sessions row for the session cookie about to be cleared. */
+export async function recordLogout(): Promise<void> {
+  const session = await currentSession();
+  if (!session?.sessionId) return;
+  try {
+    await withClaims({ sub: session.userId, role: "authenticated" }, (client) =>
+      client.query(
+        `update public.login_sessions set logged_out_at = now()
+          where id = $1 and user_id = $2 and logged_out_at is null`,
+        [session.sessionId, session.userId],
+      ),
+    );
+  } catch {
+    // Same reasoning as recordLogin: never block logout on this.
   }
 }
 

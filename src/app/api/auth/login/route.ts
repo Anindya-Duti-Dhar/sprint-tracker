@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { withAnon } from "@/lib/db";
-import { setSessionCookie, signSessionToken } from "@/lib/auth";
+import { setSessionCookie, signSessionToken, recordLogin } from "@/lib/auth";
 import { checkRateLimit, recordFailure, clearRateLimit } from "@/lib/rateLimit";
 
 // Brute-force guard: 10 failed attempts per email+IP per 10 minutes. Only
@@ -44,7 +44,9 @@ export async function POST(request: Request) {
   }
   clearRateLimit(rateLimitKey);
 
-  const token = signSessionToken(row.id);
+  const userAgent = request.headers.get("user-agent");
+  const sessionId = await recordLogin(row.id, ip, userAgent);
+  const token = signSessionToken(row.id, sessionId);
   await setSessionCookie(token);
   return NextResponse.json({ ok: true });
 }

@@ -109,6 +109,18 @@ type Activity = {
   sort_order: number;
 };
 type Member = { project_id: string; user_id: string; project_role: string };
+type LoginSession = {
+  id: string;
+  user_id: string;
+  logged_in_at: string;
+  logged_out_at: string | null;
+  expires_at: string;
+  ip_address: string | null;
+  user_agent: string | null;
+  full_name: string;
+  email: string;
+  avatar_url: string | null;
+};
 
 export default function AdminClient({
   users,
@@ -116,12 +128,14 @@ export default function AdminClient({
   taskTypes,
   activities,
   members,
+  sessions,
 }: {
   users: User[];
   projects: Project[];
   taskTypes: TaskType[];
   activities: Activity[];
   members: Member[];
+  sessions: LoginSession[];
 }) {
   const [tab, setTab] = useState(0);
   return (
@@ -130,20 +144,25 @@ export default function AdminClient({
         Admin
       </Typography>
       <Typography color="text.secondary" sx={{ mb: 2.5 }}>
-        Users, sprint details, and the Task Type / Activity dropdown lists.
+        Users, sprint details, the Task Type / Activity dropdown lists, and login activity.
       </Typography>
       <Tabs
         value={tab}
         onChange={(_, v) => setTab(v)}
+        variant="scrollable"
+        scrollButtons="auto"
+        allowScrollButtonsMobile
         sx={{ mb: 2.5, borderBottom: 1, borderColor: "divider" }}
       >
         <Tab label="Users" />
         <Tab label="Sprints" />
         <Tab label="Dropdown lists" />
+        <Tab label="Login activity" />
       </Tabs>
       {tab === 0 && <UsersPanel users={users} />}
       {tab === 1 && <SprintsPanel projects={projects} users={users} members={members} />}
       {tab === 2 && <LookupsPanel taskTypes={taskTypes} activities={activities} />}
+      {tab === 3 && <SessionsPanel sessions={sessions} users={users} />}
     </Box>
   );
 }
@@ -899,5 +918,207 @@ function ActivityDialog({
         </DialogActions>
       </Box>
     </Dialog>
+  );
+}
+
+// ------------------------------------------------------ Login activity ----
+
+const sessionsHeadCellSx = {
+  position: "sticky" as const,
+  top: 0,
+  zIndex: 2,
+  bgcolor: "background.paper",
+  whiteSpace: "nowrap",
+};
+
+// pg returns `timestamptz` columns as JS Date objects (not ISO strings) —
+// unlike the `date`-typed form fields elsewhere in this file, so these take
+// Date | string and normalize with `new Date(...)` rather than `parseISO`.
+function formatDateTime(value: string | Date | null) {
+  if (!value) return "—";
+  return format(new Date(value), "d MMM yyyy, HH:mm");
+}
+
+function formatDuration(start: string | Date, end: string | Date | null) {
+  const startMs = new Date(start).getTime();
+  const endMs = end ? new Date(end).getTime() : Date.now();
+  const totalMinutes = Math.max(0, Math.round((endMs - startMs) / 60000));
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+  const parts: string[] = [];
+  if (days) parts.push(`${days}d`);
+  if (hours) parts.push(`${hours}h`);
+  if (!days && minutes) parts.push(`${minutes}m`);
+  if (parts.length === 0) parts.push("< 1m");
+  return parts.join(" ");
+}
+
+type SessionStatus = "active" | "expired" | "ended";
+
+function sessionStatus(session: LoginSession): SessionStatus {
+  if (session.logged_out_at) return "ended";
+  return new Date(session.expires_at).getTime() > Date.now() ? "active" : "expired";
+}
+
+const STATUS_LABEL: Record<SessionStatus, string> = {
+  active: "Active",
+  expired: "Expired",
+  ended: "Ended",
+};
+
+const STATUS_COLOR: Record<SessionStatus, "success" | "default" | "warning"> = {
+  active: "success",
+  expired: "warning",
+  ended: "default",
+};
+
+function simplifyUserAgent(ua: string | null) {
+  if (!ua) return "—";
+  const browser = /Edg\//.test(ua)
+    ? "Edge"
+    : /Chrome\//.test(ua)
+      ? "Chrome"
+      : /Firefox\//.test(ua)
+        ? "Firefox"
+        : /Safari\//.test(ua) && !/Chrome\//.test(ua)
+          ? "Safari"
+          : "Browser";
+  const os = /Windows/.test(ua)
+    ? "Windows"
+    : /Mac OS X/.test(ua)
+      ? "macOS"
+      : /Android/.test(ua)
+        ? "Android"
+        : /iPhone|iPad/.test(ua)
+          ? "iOS"
+          : /Linux/.test(ua)
+            ? "Linux"
+            : "";
+  return os ? `${browser} · ${os}` : browser;
+}
+
+function SessionsPanel({ sessions, users }: { sessions: LoginSession[]; users: User[] }) {
+  const [userFilter, setUserFilter] = useState("all");
+
+  const filtered =
+    userFilter === "all" ? sessions : sessions.filter((s) => s.user_id === userFilter);
+
+  const activeCount = filtered.filter((s) => sessionStatus(s) === "active").length;
+  const durationsMs = filtered.map(
+    (s) =>
+      (s.logged_out_at ? new Date(s.logged_out_at).getTime() : Date.now()) -
+      new Date(s.logged_in_at).getTime(),
+  );
+  const avgMinutes =
+    durationsMs.length > 0
+      ? Math.round(durationsMs.reduce((a, b) => a + b, 0) / durationsMs.length / 60000)
+      : 0;
+  const avgLabel = avgMinutes >= 60 ? `${Math.round((avgMinutes / 60) * 10) / 10}h` : `${avgMinutes}m`;
+
+  return (
+    <Stack spacing={2.5}>
+      <TextField
+        select
+        size="small"
+        label="Filter by user"
+        value={userFilter}
+        onChange={(e) => setUserFilter(e.target.value)}
+        sx={{ minWidth: 220, alignSelf: "flex-start" }}
+      >
+        <MenuItem value="all">All users</MenuItem>
+        {users.map((u) => (
+          <MenuItem key={u.id} value={u.id}>
+            {u.full_name}
+          </MenuItem>
+        ))}
+      </TextField>
+
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <Paper variant="outlined" sx={{ p: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              Total sessions
+            </Typography>
+            <Typography variant="h5">{filtered.length}</Typography>
+          </Paper>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <Paper variant="outlined" sx={{ p: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              Currently active
+            </Typography>
+            <Typography variant="h5">{activeCount}</Typography>
+          </Paper>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <Paper variant="outlined" sx={{ p: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              Avg. session length
+            </Typography>
+            <Typography variant="h5">{avgLabel}</Typography>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      <Paper sx={{ overflow: "auto", maxHeight: "70vh" }}>
+        <Table size="small" stickyHeader>
+          <TableHead>
+            <TableRow>
+              <TableCell sx={sessionsHeadCellSx}>User</TableCell>
+              <TableCell sx={sessionsHeadCellSx}>Logged in</TableCell>
+              <TableCell sx={sessionsHeadCellSx}>Logged out</TableCell>
+              <TableCell sx={sessionsHeadCellSx}>Duration</TableCell>
+              <TableCell sx={sessionsHeadCellSx}>Status</TableCell>
+              <TableCell sx={sessionsHeadCellSx}>Device</TableCell>
+              <TableCell sx={sessionsHeadCellSx}>IP address</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filtered.map((s) => {
+              const status = sessionStatus(s);
+              return (
+                <TableRow key={s.id} hover>
+                  <TableCell>
+                    <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                      <Avatar src={s.avatar_url ?? undefined} sx={{ width: 26, height: 26, fontSize: 11 }}>
+                        {userInitials(s.full_name)}
+                      </Avatar>
+                      <Box>
+                        <Typography variant="body2">{s.full_name}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {s.email}
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>{formatDateTime(s.logged_in_at)}</TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>{formatDateTime(s.logged_out_at)}</TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>
+                    {formatDuration(s.logged_in_at, s.logged_out_at)}
+                  </TableCell>
+                  <TableCell>
+                    <Chip size="small" label={STATUS_LABEL[status]} color={STATUS_COLOR[status]} />
+                  </TableCell>
+                  <TableCell sx={{ color: "text.secondary", whiteSpace: "nowrap" }}>
+                    {simplifyUserAgent(s.user_agent)}
+                  </TableCell>
+                  <TableCell sx={{ color: "text.secondary", whiteSpace: "nowrap" }}>
+                    {s.ip_address ?? "—"}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+            {filtered.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} sx={{ color: "text.secondary", textAlign: "center", py: 4 }}>
+                  No login sessions yet.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </Paper>
+    </Stack>
   );
 }
